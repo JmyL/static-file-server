@@ -1,0 +1,9 @@
+/.direnv
+/Release/
+/Debug/
+/RelWithDebInfo/
+/compile_commands.json
+/.cache
+/Testing/
+perf.data
+perf.data.old
