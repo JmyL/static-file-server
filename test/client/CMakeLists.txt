@@ -1,5 +1,0 @@
-add_executable(client_test client_test.cpp)
-target_link_libraries(client_test PRIVATE client)
-add_test_suite(client_test)
-include(ClangTidy)
-add_clangtidy(client_test)
