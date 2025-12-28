@@ -19,6 +19,15 @@ include(UseCcache)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+get_filename_component(TEST_CERT_PATH "${CMAKE_SOURCE_DIR}/cert" ABSOLUTE)
+configure_file(
+    ${CMAKE_SOURCE_DIR}/config.h.in
+    ${CMAKE_BINARY_DIR}/generated/config.h
+    @ONLY
+)
+add_library(generated_config INTERFACE)
+target_include_directories(generated_config INTERFACE ${CMAKE_BINARY_DIR})
+
 add_subdirectory(src bin)
 include(CTest)
 add_subdirectory(test)

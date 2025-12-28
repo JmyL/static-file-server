@@ -1,0 +1,3 @@
+#pragma once
+#define EXASOL_CERT_PATH "@TEST_CERT_PATH@/exasol/"
+#define TEST_CERT_PATH "@TEST_CERT_PATH@/dummy/"
