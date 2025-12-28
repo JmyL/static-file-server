@@ -22,15 +22,14 @@ void session(tcp::socket sock) {
     try {
         for (;;) {
             char data[max_length];
-
-            boost::system::error_code error;
-            size_t length = sock.read_some(boost::asio::buffer(data), error);
-            if (error == boost::asio::error::eof)
-                break; // Connection closed cleanly by peer.
-            else if (error)
-                throw boost::system::system_error(error); // Some other error.
-
+            size_t length = sock.read_some(boost::asio::buffer(data));
             boost::asio::write(sock, boost::asio::buffer(data, length));
+        }
+    } catch (boost::system::system_error &e) {
+        if (e.code() == boost::asio::error::eof) {
+            std::cout << "Connection closed by peer.\n";
+        } else {
+            std::cerr << "Boost System Error in thread: " << e.what() << "\n";
         }
     } catch (std::exception &e) {
         std::cerr << "Exception in thread: " << e.what() << "\n";
