@@ -3,6 +3,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <numeric>
 #include <string_view>
 
 namespace net = boost::asio;
@@ -47,6 +48,46 @@ TEST_P(StreamBufWithSizeLimit, AllocatesContiguousMemorySpace) {
 
 TEST_P(StreamBufWithSizeLimit, ThrowsLengthErrorWhenPrepareExceedsMaxSize) {
     EXPECT_THROW(sbuf->prepare(param * 2), std::length_error);
+}
+
+TEST_P(StreamBufWithSizeLimit, DoesntMoveMemoryForSmallPreparation) {
+    auto out1 = sbuf->prepare(param);
+    sbuf->commit(param);
+    auto in1 = sbuf->data();
+    sbuf->consume(param);
+
+    auto out2 = sbuf->prepare(128);
+    sbuf->commit(128);
+    auto in2 = sbuf->data();
+    sbuf->consume(64);
+
+    auto out3 = sbuf->prepare(128);
+    sbuf->commit(128);
+    auto in3 = sbuf->data();
+    sbuf->consume(64);
+
+    EXPECT_EQ(out1.data(), in1.data());
+    EXPECT_EQ(out2.data(), out1.data());
+    EXPECT_GT(out3.data(), out2.data());
+    EXPECT_GT(in3.data(), in2.data());
+}
+
+TEST_P(StreamBufWithSizeLimit, MovesInputForLargePreparation) {
+    auto out1 = sbuf->prepare(param);
+    sbuf->commit(param);
+    sbuf->consume(param);
+    auto out2 = sbuf->prepare(128);
+    std::iota(static_cast<char *>(out2.data()),
+              static_cast<char *>(out2.data()) + 128, 0);
+    sbuf->commit(128);
+    sbuf->consume(64); // consume 64 bytes only; 64 bytes of input remain
+
+    auto out3 = sbuf->prepare(param - 64);
+    sbuf->commit(param - 64);
+    auto in = sbuf->data();
+
+    EXPECT_EQ(in.data(), out1.data());
+    EXPECT_EQ(static_cast<const char *>(in.data())[0], 64);
 }
 
 INSTANTIATE_TEST_SUITE_P(AStreamBuf, StreamBufWithSizeLimit,
