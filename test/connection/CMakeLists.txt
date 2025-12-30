@@ -1,0 +1,4 @@
+add_executable(test_connection test_connection.cpp)
+target_link_libraries(test_connection PRIVATE connection)
+add_test_suite(test_connection)
+enable_coverage(connection)

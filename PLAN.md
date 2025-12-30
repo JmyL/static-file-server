@@ -15,4 +15,5 @@
   - See [coroutine server](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/example/cpp20/coroutines/echo_server.cpp)
 - [ ] Compare Nginx and our custom solution on AWS EC2
 - [ ] Make socket communication and file read interleaved
+- [ ] Use memory pool
 <!-- - [ ] Try zero-copy using io_uring -->
