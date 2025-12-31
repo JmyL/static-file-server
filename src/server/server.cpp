@@ -7,8 +7,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-#include <connection/connection.hpp>
-
 #include <boost/asio.hpp>
 #include <cstdlib>
 #include <iostream>
@@ -20,13 +18,13 @@ using boost::asio::ip::tcp;
 const int max_length = 1024;
 
 void session(tcp::socket sock) {
-    sock.write_some(boost::asio::mutable_buffer(nullptr, 0)); // Dummy call to ensure socket is valid
     try {
-        Connection conn{std::move(sock)};
+        auto sbuf = boost::asio::streambuf(max_length);
         for (;;) {
-            char data[max_length];
-            auto len = conn.read_line(data, sizeof(data));
-            conn.write_line(data, len);
+            auto len = boost::asio::read_until(sock, sbuf, "\n");
+            sbuf.consume(len);
+
+            boost::asio::write(sock, boost::asio::buffer("world\n", 6));
         }
     } catch (boost::system::system_error &e) {
         if (e.code() == boost::asio::error::eof) {

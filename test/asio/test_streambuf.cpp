@@ -1,4 +1,5 @@
 #include <boost/asio.hpp>
+#include <util/util.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -7,14 +8,6 @@
 #include <string_view>
 
 namespace net = boost::asio;
-
-constexpr auto operator""_KiB(unsigned long long x) -> unsigned long long {
-    return x * 1024;
-}
-
-constexpr auto operator""_MiB(unsigned long long x) -> unsigned long long {
-    return x * 1024 * 1024;
-}
 
 template <typename BufferSequence>
 auto bufferseq_to_string_view(BufferSequence &bufseq) -> std::string_view {

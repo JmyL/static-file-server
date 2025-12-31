@@ -1,3 +1,4 @@
+add_subdirectory(util)
 add_subdirectory(calc)
 add_subdirectory(connection)
 add_subdirectory(server)

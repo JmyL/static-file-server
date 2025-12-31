@@ -30,17 +30,37 @@ int main(int argc, char *argv[]) {
         tcp::resolver resolver(io_context);
         boost::asio::connect(s, resolver.resolve(argv[1], argv[2]));
 
-        std::cout << "Enter message: ";
-        constexpr const char *request = "hello\nhello\n";
-        size_t request_length = std::strlen(request);
-        boost::asio::write(s, boost::asio::buffer(request, request_length));
-
+        boost::asio::streambuf sbuf;
         char reply[max_length];
-        size_t reply_length =
-            boost::asio::read(s, boost::asio::buffer(reply, request_length));
-        std::cout << "Reply is: ";
-        std::cout.write(reply, reply_length);
-        std::cout << "\n";
+        {
+            constexpr const char *request = "hello\nhello\n";
+            size_t request_length = std::strlen(request);
+            boost::asio::write(s, boost::asio::buffer(request, request_length));
+        }
+        {
+            size_t len = boost::asio::read_until(s, sbuf, "\n");
+            auto read = sbuf.data();
+            std::cout.write(static_cast<const char *>(read.data()),
+                            read.size());
+            sbuf.consume(len);
+        }
+        {
+            constexpr const char *request = "hello";
+            size_t request_length = std::strlen(request);
+            boost::asio::write(s, boost::asio::buffer(request, request_length));
+        }
+        {
+            constexpr const char *request = "\n";
+            size_t request_length = std::strlen(request);
+            boost::asio::write(s, boost::asio::buffer(request, request_length));
+        }
+        {
+            size_t len = boost::asio::read_until(s, sbuf, "\n");
+            auto read = sbuf.data();
+            std::cout.write(static_cast<const char *>(read.data()),
+                            read.size());
+            sbuf.consume(len);
+        }
     } catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }
