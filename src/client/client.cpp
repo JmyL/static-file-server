@@ -33,34 +33,35 @@ int main(int argc, char *argv[]) {
         boost::asio::streambuf sbuf;
         char reply[max_length];
         {
-            constexpr const char *request = "hello\nhello\n";
+            constexpr const char *request = "hello\r\nhello\r\n";
             size_t request_length = std::strlen(request);
             boost::asio::write(s, boost::asio::buffer(request, request_length));
         }
         {
-            size_t len = boost::asio::read_until(s, sbuf, "\n");
+            std::cout << "Waiting for reply...\n";
+            size_t len = boost::asio::read_until(s, sbuf, "\r\n");
             auto read = sbuf.data();
             std::cout.write(static_cast<const char *>(read.data()),
                             read.size());
             sbuf.consume(len);
         }
-        {
-            constexpr const char *request = "hello";
-            size_t request_length = std::strlen(request);
-            boost::asio::write(s, boost::asio::buffer(request, request_length));
-        }
-        {
-            constexpr const char *request = "\n";
-            size_t request_length = std::strlen(request);
-            boost::asio::write(s, boost::asio::buffer(request, request_length));
-        }
-        {
-            size_t len = boost::asio::read_until(s, sbuf, "\n");
-            auto read = sbuf.data();
-            std::cout.write(static_cast<const char *>(read.data()),
-                            read.size());
-            sbuf.consume(len);
-        }
+        // {
+        //     constexpr const char *request = "hello";
+        //     size_t request_length = std::strlen(request);
+        //     boost::asio::write(s, boost::asio::buffer(request, request_length));
+        // }
+        // {
+        //     constexpr const char *request = "\n";
+        //     size_t request_length = std::strlen(request);
+        //     boost::asio::write(s, boost::asio::buffer(request, request_length));
+        // }
+        // {
+        //     size_t len = boost::asio::read_until(s, sbuf, "\n");
+        //     auto read = sbuf.data();
+        //     std::cout.write(static_cast<const char *>(read.data()),
+        //                     read.size());
+        //     sbuf.consume(len);
+        // }
     } catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }

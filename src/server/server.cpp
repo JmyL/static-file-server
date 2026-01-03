@@ -10,10 +10,12 @@
 #include <boost/asio.hpp>
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
 #include <thread>
 #include <utility>
 
 using boost::asio::ip::tcp;
+using namespace std::string_view_literals;
 
 const int max_length = 1024;
 
@@ -21,10 +23,14 @@ void session(tcp::socket sock) {
     try {
         auto sbuf = boost::asio::streambuf(max_length);
         for (;;) {
-            auto len = boost::asio::read_until(sock, sbuf, "\n");
+            auto len = boost::asio::read_until(sock, sbuf, "\r\n");
+            std::cout << "Received " << len << " bytes\n";
             sbuf.consume(len);
 
-            boost::asio::write(sock, boost::asio::buffer("world\n", 6));
+            constexpr auto response = "world\r\n"sv;
+            auto write_len = boost::asio::write(
+                sock, boost::asio::buffer(response.data(), response.size()));
+            std::cout << "Sent " << write_len << " bytes\n";
         }
     } catch (boost::system::system_error &e) {
         if (e.code() == boost::asio::error::eof) {

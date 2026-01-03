@@ -57,4 +57,28 @@ TEST(ReadUntil, UsesConsecutiveReadSomeCalls) {
     sbuf.consume(len);
 }
 
+TEST(ReadUntil, HandlesMultiCharDelimiter) {
+    NiceMock<MockSocket> mock_socket;
+    EXPECT_CALL(mock_socket, read_some(_, _))
+        .WillOnce([](const net::mutable_buffer &buffer,
+                     boost::system::error_code &ec) {
+            constexpr const auto data = "world"sv;
+            std::ranges::copy(data, static_cast<char *>(buffer.data()));
+            ec = boost::system::error_code();
+            return data.size();
+        })
+        .WillOnce([](const net::mutable_buffer &buffer,
+                     boost::system::error_code &ec) {
+            constexpr const auto data = "\r\n"sv;
+            std::ranges::copy(data, static_cast<char *>(buffer.data()));
+            ec = boost::system::error_code();
+            return data.size();
+        });
+
+    net::streambuf sbuf;
+    auto len = net::read_until(mock_socket, sbuf, "\r\n");
+    EXPECT_EQ(bufferseq_to_string_view(sbuf.data()), "world\r\n"sv);
+    sbuf.consume(len);
+}
+
 } // namespace
