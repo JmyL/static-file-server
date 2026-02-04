@@ -1,5 +1,5 @@
 find_package(Boost REQUIRED)
-
-add_executable(test_asio test_free_functions.cpp test_streambuf.cpp)
-target_link_libraries(test_asio PRIVATE util)
+message(status "Boost version: ${Boost_VERSION}")
+add_executable(test_asio test_free_functions.cpp test_streambuf.cpp test_streamfile.cpp)
+target_link_libraries(test_asio PRIVATE util uring)
 add_test_suite(test_asio)
