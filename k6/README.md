@@ -1,0 +1,1 @@
+You can run benchmark using `k6 run script.js`.

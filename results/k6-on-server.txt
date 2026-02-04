@@ -1,0 +1,46 @@
+📦[sungsik@f43 k6]$ k6 run script.js --vus 5 --duration 5s
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: script.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 5 max VUs, 35s max duration (incl. graceful stop):
+              * default: 5 looping VUs for 5s (gracefulStop: 30s)
+
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 25      4.990316/s
+    checks_succeeded...: 100.00% 25 out of 25
+    checks_failed......: 0.00%   0 out of 25
+
+    ✓ status is 200
+
+    HTTP
+    http_req_duration..............: avg=755.48µs min=128.01µs med=696.15µs max=1.66ms p(90)=1.41ms p(95)=1.59ms
+      { expected_response:true }...: avg=755.48µs min=128.01µs med=696.15µs max=1.66ms p(90)=1.41ms p(95)=1.59ms
+    http_req_failed................: 0.00%  0 out of 25
+    http_reqs......................: 25     4.990316/s
+
+    EXECUTION
+    iteration_duration.............: avg=1s       min=1s       med=1s       max=1s     p(90)=1s     p(95)=1s    
+    iterations.....................: 25     4.990316/s
+    vus............................: 5      min=5       max=5
+    vus_max........................: 5      min=5       max=5
+
+    NETWORK
+    data_received..................: 5.9 kB 1.2 kB/s
+    data_sent......................: 2.1 kB 424 B/s
+
+
+
+
+running (05.0s), 0/5 VUs, 25 complete and 0 interrupted iterations
+default ✓ [======================================] 5 VUs  5s
