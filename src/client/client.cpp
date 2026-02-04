@@ -33,13 +33,13 @@ int main(int argc, char *argv[]) {
         boost::asio::streambuf sbuf;
         char reply[max_length];
         {
-            constexpr const char *request = "hello\r\nhello\r\n";
+            constexpr const char *request = "hello\r\n\r\nhello\r\n\r\n";
             size_t request_length = std::strlen(request);
             boost::asio::write(s, boost::asio::buffer(request, request_length));
         }
         {
             std::cout << "Waiting for reply...\n";
-            size_t len = boost::asio::read_until(s, sbuf, "\r\n");
+            size_t len = boost::asio::read_until(s, sbuf, "\r\n\r\n");
             auto read = sbuf.data();
             std::cout.write(static_cast<const char *>(read.data()),
                             read.size());
