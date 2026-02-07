@@ -73,8 +73,10 @@ void session(net::io_context &io_context, tcp::socket sock) {
     } catch (boost::system::system_error &e) {
         if (e.code() == net::error::eof) {
             std::cout << "Connection closed by peer.\n";
+            return;
         } else {
             std::cerr << "Boost System Error in thread: " << e.what() << "\n";
+            return;
         }
     } catch (std::exception &e) {
         std::cerr << "Exception in thread: " << e.what() << "\n";
