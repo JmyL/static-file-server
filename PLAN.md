@@ -15,8 +15,10 @@
   - Test your server using curl
 
 - [x] Test the static file server using k6 (load testing tool)
+     - See result folder on commit `99cbbfc`
 
 - [ ] Implement a static file server using boost asio, but using synchronous I/O
+     - [x] Write `test_streamfile.cpp`
 
 - [ ] Write it async using callbacks, run io_context on multiple threads
   - See [async server](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/example/cpp11/echo/async_tcp_echo_server.cpp)
@@ -24,6 +26,8 @@
   - See [coroutine server](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/example/cpp20/coroutines/echo_server.cpp)
 
 ---
+
+- [ ] Implement keep-alive
 
 - [ ] Compare Nginx and our custom solution on AWS EC2
 
