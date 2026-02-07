@@ -16,13 +16,6 @@ namespace net = boost::asio;
 namespace {
 
 template <typename BufferSequence>
-auto bufferseq_to_string_view(const BufferSequence &bufseq)
-    -> std::string_view {
-    return std::string_view(static_cast<const char *>(bufseq.data()),
-                            bufseq.size());
-}
-
-template <typename BufferSequence>
 auto bufferseq_to_string_view(const BufferSequence &bufseq, size_t len)
     -> std::string_view {
     return std::string_view(static_cast<const char *>(bufseq.data()), len);
@@ -51,7 +44,7 @@ TEST(ReadUntil, UsesConsecutiveReadSomeCalls) {
         })
         .WillOnce([](const net::mutable_buffer &buffer,
                      boost::system::error_code &ec) {
-            constexpr const auto data = "\n"sv;
+            constexpr const auto data = "\ndummy"sv;
             std::ranges::copy(data, static_cast<char *>(buffer.data()));
             ec = boost::system::error_code();
             return data.size();
@@ -59,7 +52,7 @@ TEST(ReadUntil, UsesConsecutiveReadSomeCalls) {
 
     net::streambuf sbuf;
     auto len = net::read_until(mock_socket, sbuf, "\n");
-    EXPECT_EQ(bufferseq_to_string_view(sbuf.data()), "world\n"sv);
+    EXPECT_EQ(bufferseq_to_string_view(sbuf.data(), len), "world\n"sv);
     sbuf.consume(len);
 }
 
@@ -75,7 +68,7 @@ TEST(ReadUntil, HandlesMultiCharDelimiter) {
         })
         .WillOnce([](const net::mutable_buffer &buffer,
                      boost::system::error_code &ec) {
-            constexpr const auto data = "\r\nfalse"sv;
+            constexpr const auto data = "\r\ndummy"sv;
             std::ranges::copy(data, static_cast<char *>(buffer.data()));
             ec = boost::system::error_code();
             return data.size();
