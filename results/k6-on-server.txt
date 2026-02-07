@@ -1,4 +1,4 @@
-📦[sungsik@f43 k6]$ k6 run script.js --vus 5 --duration 5s
+📦[sungsik@f43 k6]$ PORT=8081 k6 run script.js --vus 5000
 
          /\      Grafana   /‾‾/  
     /\  /  \     |\  __   /  /   
@@ -10,37 +10,37 @@
         script: script.js
         output: -
 
-     scenarios: (100.00%) 1 scenario, 5 max VUs, 35s max duration (incl. graceful stop):
-              * default: 5 looping VUs for 5s (gracefulStop: 30s)
+     scenarios: (100.00%) 1 scenario, 5000 max VUs, 1m0s max duration (incl. graceful stop):
+              * default: 5000 looping VUs for 30s (gracefulStop: 30s)
 
 
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 25      4.990316/s
-    checks_succeeded...: 100.00% 25 out of 25
-    checks_failed......: 0.00%   0 out of 25
+    checks_total.......: 412471  13562.526816/s
+    checks_succeeded...: 100.00% 412471 out of 412471
+    checks_failed......: 0.00%   0 out of 412471
 
     ✓ status is 200
 
     HTTP
-    http_req_duration..............: avg=755.48µs min=128.01µs med=696.15µs max=1.66ms p(90)=1.41ms p(95)=1.59ms
-      { expected_response:true }...: avg=755.48µs min=128.01µs med=696.15µs max=1.66ms p(90)=1.41ms p(95)=1.59ms
-    http_req_failed................: 0.00%  0 out of 25
-    http_reqs......................: 25     4.990316/s
+    http_req_duration..............: avg=351.33ms min=85.08µs med=263.52ms max=3.73s p(90)=750.98ms p(95)=936.1ms 
+      { expected_response:true }...: avg=351.33ms min=85.08µs med=263.52ms max=3.73s p(90)=750.98ms p(95)=936.1ms 
+    http_req_failed................: 0.00%  0 out of 412471
+    http_reqs......................: 412471 13562.526816/s
 
     EXECUTION
-    iteration_duration.............: avg=1s       min=1s       med=1s       max=1s     p(90)=1s     p(95)=1s    
-    iterations.....................: 25     4.990316/s
-    vus............................: 5      min=5       max=5
-    vus_max........................: 5      min=5       max=5
+    iteration_duration.............: avg=364.52ms min=10.15ms med=276.34ms max=3.74s p(90)=762.59ms p(95)=947.84ms
+    iterations.....................: 412471 13562.526816/s
+    vus............................: 5000   min=5000        max=5000
+    vus_max........................: 5000   min=5000        max=5000
 
     NETWORK
-    data_received..................: 5.9 kB 1.2 kB/s
-    data_sent......................: 2.1 kB 424 B/s
+    data_received..................: 591 MB 19 MB/s
+    data_sent......................: 35 MB  1.2 MB/s
 
 
 
 
-running (05.0s), 0/5 VUs, 25 complete and 0 interrupted iterations
-default ✓ [======================================] 5 VUs  5s
+running (0m30.4s), 0000/5000 VUs, 412471 complete and 0 interrupted iterations
+default ✓ [======================================] 5000 VUs  30s
