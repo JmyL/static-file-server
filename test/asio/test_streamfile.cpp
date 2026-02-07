@@ -1,6 +1,6 @@
-#define BOOST_ASIO_HAS_IO_URING 1
 #include <boost/asio.hpp>
 #include <boost/asio/stream_file.hpp>
+
 #include <util/util.hpp>
 
 #include <gmock/gmock.h>
@@ -44,7 +44,7 @@ TEST_F(AStreamFile, ReturnsCorrectSize) {
     net::stream_file file(ioc, filename, net::stream_file::flags::read_only);
 
     EXPECT_EQ(file.size(), to_write.size());
-} // namespace
+}
 
 TEST_F(AStreamFile, SupportsRead) {
     net::stream_file file(ioc, filename, net::stream_file::flags::read_only);
@@ -54,6 +54,15 @@ TEST_F(AStreamFile, SupportsRead) {
 
     EXPECT_EQ(buffer.size(), to_write.size());
     EXPECT_EQ(std::string_view(buffer.data(), buffer.size()), to_write);
-} // namespace
+}
+
+TEST_F(AStreamFile, ThrowsOnFileNotFound) {
+    EXPECT_THROW(
+        {
+            net::stream_file file(ioc, filename + "no",
+                                  net::stream_file::flags::read_only);
+        },
+        boost::system::system_error);
+}
 
 } // namespace
