@@ -1,0 +1,46 @@
+📦[sungsik@f43 k6]$ PORT=8081 k6 run script.js
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: script.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 5000 max VUs, 1m0s max duration (incl. graceful stop):
+              * default: 5000 looping VUs for 30s (gracefulStop: 30s)
+
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 431224  7178.757096/s
+    checks_succeeded...: 100.00% 431224 out of 431224
+    checks_failed......: 0.00%   0 out of 431224
+
+    ✓ status is 200
+
+    HTTP
+    http_req_duration..............: avg=332.45ms min=35.02ms med=321.47ms max=12.76s p(90)=368.11ms p(95)=404.25ms
+      { expected_response:true }...: avg=332.45ms min=35.02ms med=321.47ms max=12.76s p(90)=368.11ms p(95)=404.25ms
+    http_req_failed................: 0.00%  0 out of 431224
+    http_reqs......................: 431224 7178.757096/s
+
+    EXECUTION
+    iteration_duration.............: avg=344.72ms min=45.74ms med=332.12ms max=12.77s p(90)=384.09ms p(95)=421.84ms
+    iterations.....................: 431224 7178.757096/s
+    vus............................: 3739   min=3739        max=5000
+    vus_max........................: 5000   min=5000        max=5000
+
+    NETWORK
+    data_received..................: 618 MB 10 MB/s
+    data_sent......................: 37 MB  616 kB/s
+
+
+
+
+running (1m00.1s), 0000/5000 VUs, 431224 complete and 3739 interrupted iterations
+default ✓ [======================================] 5000 VUs  30s
