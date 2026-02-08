@@ -7,6 +7,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
+// 이해하고 지나갑시다. Callback으로 되어 있는 코드도 이해할 수 있어야 하니깐.
 
 #include <boost/asio.hpp>
 #include <cstdlib>

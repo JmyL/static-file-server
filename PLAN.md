@@ -25,9 +25,9 @@
   - Results are stored as `result/k6-on-nginx.txt` and `result/k6-on-our-server.txt`
 
 
-- [ ] Write it async using callbacks
+- [-] Write it async using callbacks
   - Compare these two implementations `example/asio/blocking_tcp_echo_server.cpp` and `example/asio/callback_async_echo_server.cpp`
-  - Modify server.cpp like given async example
+  - Modify server.cpp like given async example, but using `callbacks` branch
   - Compare performance using k6
 
 - [ ] Write it async using coroutines
