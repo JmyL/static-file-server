@@ -133,6 +133,10 @@ int main(int argc, char *argv[]) {
 
         server s(io_context, std::atoi(argv[1]));
 
+        // run 호출은 io_context에 등록된 작업이 완료될 때 까지 block돼요.
+        // 위에 async_accept에서 계속해서 다음 세션을 기다리기 위해 또 다른
+        // async_accept을 등록하기 때문에, run이 종료되는 경우는 외부 signal이나
+        // unhandled exception으로 서버가 shutdown된 경우 뿐입니다.
         io_context.run();
     } catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";
