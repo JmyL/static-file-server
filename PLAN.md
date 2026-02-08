@@ -25,7 +25,7 @@
   - Results are stored as `result/k6-on-nginx.txt` and `result/k6-on-our-server.txt`
 
 
-- [-] Write it async using callbacks
+- [x] Write it async using callbacks: done on `0f02ded`
   - Compare these two implementations `example/asio/blocking_tcp_echo_server.cpp` and `example/asio/callback_async_echo_server.cpp`
   - Implement `callback_server.cpp` like given async example
   - Run `io_context` on multiple threads
