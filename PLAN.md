@@ -27,7 +27,9 @@
 
 - [-] Write it async using callbacks
   - Compare these two implementations `example/asio/blocking_tcp_echo_server.cpp` and `example/asio/callback_async_echo_server.cpp`
-  - Modify server.cpp like given async example, but using `callbacks` branch
+  - Implement `callback_server.cpp` like given async example
+  - Run `io_context` on multiple threads
+  - Make file io also async
   - Compare performance using k6
 
 - [ ] Write it async using coroutines
@@ -37,6 +39,8 @@
   - Compare performance using k6
 
 ---
+
+- [ ] Implement caching
 
 - [ ] Implement keep-alive
 
