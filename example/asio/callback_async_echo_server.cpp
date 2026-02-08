@@ -73,6 +73,8 @@ class session : public std::enable_shared_from_this<session> {
 
     tcp::socket socket_;
     enum { max_length = 1024 };
+    // async_read_some으로 읽은 buffer의 수명을 async_write가 끝날 때 까지
+    // 유지하기 위해 data_를 session 객체의 멤버로 선언함.
     char data_[max_length];
 };
 
