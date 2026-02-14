@@ -32,7 +32,7 @@
   - Make file io also async
   - Compare performance using k6
 
-- [x] Write it async using coroutines
+- [x] Write it async using coroutines: done on `c314844`
   - Compare these two implementations `example/asio/callback_async_echo_server.cpp` and `example/asio/awaitable_async_echo_server.cpp` 
   - Compare these two implementations `example/asio/blocking_tcp_echo_server.cpp` and `example/asio/awaitable_async_echo_server.cpp`
   - Write `callback_server.cpp` and `awaitable_server.cpp` like given asio example
