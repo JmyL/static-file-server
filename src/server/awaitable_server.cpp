@@ -19,7 +19,23 @@ using namespace std::string_view_literals;
 
 const int max_length = 1024;
 
-awaitable<void> session(tcp::socket sock) {
+template <typename Executor> struct ReadmeContent {
+
+    ReadmeContent(Executor &executor) {
+        auto file = net::stream_file(executor, "README.md",
+                                     net::stream_file::flags::read_only);
+        buffer.resize(file.size());
+
+        net::read(file, net::buffer(buffer));
+    }
+
+    const std::vector<char> &get() { return buffer; }
+
+    std::vector<char> buffer;
+};
+
+template <typename Executor>
+awaitable<void> session(tcp::socket sock, ReadmeContent<Executor> &content) {
     try {
         auto sbuf = net::streambuf(max_length);
         for (;;) {
@@ -30,12 +46,6 @@ awaitable<void> session(tcp::socket sock) {
 
             try {
                 auto executor = co_await this_coro::executor;
-                net::stream_file file(executor, "README.md",
-                                      net::stream_file::flags::read_only);
-                std::vector<char> buffer(file.size());
-
-                co_await net::async_read(file, net::buffer(buffer),
-                                         use_awaitable);
                 // open_file(io_context
                 constexpr auto header_template =
                     "HTTP/1.1 200 OK\r\n"
@@ -49,7 +59,8 @@ awaitable<void> session(tcp::socket sock) {
                     "Accept-Ranges: bytes\r\n"
                     "\r\n"sv;
 
-                auto header = std::format(header_template, file.size());
+                auto buffer = content.get();
+                auto header = std::format(header_template, buffer.size());
 
                 auto write_len = co_await net::async_write(
                     sock,
@@ -80,10 +91,11 @@ awaitable<void> session(tcp::socket sock) {
 
 awaitable<void> server(unsigned short port) {
     auto executor = co_await this_coro::executor;
+    auto content = ReadmeContent(executor);
     tcp::acceptor a(executor, tcp::endpoint(tcp::v4(), port));
     for (;;) {
         auto socket = co_await a.async_accept(use_awaitable);
-        co_spawn(executor, session(std::move(socket)), detached);
+        co_spawn(executor, session(std::move(socket), content), detached);
     }
 }
 

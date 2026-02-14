@@ -13,18 +13,27 @@ using namespace std::string_view_literals;
 
 const int max_length = 1024;
 
-net::stream_file open_file(net::io_context *io_context,
-                           const std::string &path) {
-    net::stream_file file(*io_context, path,
-                          net::stream_file::flags::read_only);
-    return file;
-}
+struct ReadmeContent {
+
+    ReadmeContent(net::io_context &io_context) {
+        auto file = net::stream_file(io_context, "README.md",
+                                     net::stream_file::flags::read_only);
+        buffer.resize(file.size());
+
+        net::read(file, net::buffer(buffer));
+    }
+
+    const std::vector<char> &get() { return buffer; }
+
+    std::vector<char> buffer;
+};
 
 class session : public std::enable_shared_from_this<session> {
   public:
-    session(net::io_context *io_context, tcp::socket socket)
-        : io_context_(io_context), socket_(std::move(socket)),
-          sbuf{max_length} {}
+    session(net::io_context *io_context, tcp::socket socket,
+            ReadmeContent *content)
+        : io_context_(io_context), socket_(std::move(socket)), sbuf{max_length},
+          content_{content} {}
 
     void start() { do_read(); }
 
@@ -38,7 +47,7 @@ class session : public std::enable_shared_from_this<session> {
                 if (!ec) {
                     std::cout << "Received " << length << " bytes\n";
                     sbuf.consume(length);
-                    do_file_read("README.md");
+                    do_write();
                 } else if (ec == net::error::eof) {
                     std::cout << "Connection closed by peer.\n";
                     return;
@@ -46,24 +55,6 @@ class session : public std::enable_shared_from_this<session> {
                     std::cerr << "Boost System Error: " << ec << "\n";
                     return;
                 }
-            });
-    }
-
-    void do_file_read(const std::string &path) {
-        auto self(shared_from_this());
-
-        auto file = open_file(io_context_, "README.md");
-        file_buffer.resize(file.size());
-
-        net::async_read(
-            file, net::buffer(file_buffer),
-            [this, self](boost::system::error_code ec, std::size_t /*length*/) {
-                if (!ec) {
-                    do_write();
-                }
-                // read/write callback에 error code가 전달된 경우, 서로를
-                // 호출하는 일 없이 종료되므로 이 때 reference count가 0이 되어
-                // session 객체가 최종 destroy됨.
             });
     }
 
@@ -82,13 +73,13 @@ class session : public std::enable_shared_from_this<session> {
             "Accept-Ranges: bytes\r\n"
             "\r\n"sv;
 
-        auto header = std::format(header_template, file_buffer.size());
-
+        auto buffer = content_->get();
+        auto header = std::format(header_template, buffer.size());
         net::async_write(
             socket_,
             std::array<net::const_buffer, 2>{
                 net::buffer(header.data(), header.size()),
-                net::buffer(file_buffer.data(), file_buffer.size())},
+                net::buffer(buffer.data(), buffer.size())},
             [this, self](boost::system::error_code ec, std::size_t length) {
                 if (!ec) {
                     std::cout << "Sent " << length << " bytes\n";
@@ -106,14 +97,15 @@ class session : public std::enable_shared_from_this<session> {
     net::io_context *io_context_;
     tcp::socket socket_;
     net::streambuf sbuf;
-    std::vector<char> file_buffer;
+    ReadmeContent *content_;
 };
 
 class server {
   public:
     server(boost::asio::io_context &io_context, short port)
         : io_context_(&io_context),
-          acceptor_(io_context, tcp::endpoint(tcp::v4(), port)) {
+          acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
+          content_{*io_context_} {
         do_accept();
     }
 
@@ -122,7 +114,8 @@ class server {
         acceptor_.async_accept(
             [this](boost::system::error_code ec, tcp::socket socket) {
                 if (!ec) {
-                    std::make_shared<session>(io_context_, std::move(socket))
+                    std::make_shared<session>(io_context_, std::move(socket),
+                                              &content_)
                         ->start();
                 }
 
@@ -132,6 +125,7 @@ class server {
 
     net::io_context *io_context_;
     tcp::acceptor acceptor_;
+    ReadmeContent content_;
 };
 
 int main(int argc, char *argv[]) {

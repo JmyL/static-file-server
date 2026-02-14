@@ -1,4 +1,4 @@
-📦[sungsik@f43 k6]$ PORT=8081 k6 run script.js --vus 5000
+📦[sungsik@f43 k6]$ PORT=8081 k6 run script.js
 
          /\      Grafana   /‾‾/  
     /\  /  \     |\  __   /  /   
@@ -17,30 +17,30 @@
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 412471  13562.526816/s
-    checks_succeeded...: 100.00% 412471 out of 412471
-    checks_failed......: 0.00%   0 out of 412471
+    checks_total.......: 419723  13805.17042/s
+    checks_succeeded...: 100.00% 419723 out of 419723
+    checks_failed......: 0.00%   0 out of 419723
 
     ✓ status is 200
 
     HTTP
-    http_req_duration..............: avg=351.33ms min=85.08µs med=263.52ms max=3.73s p(90)=750.98ms p(95)=936.1ms 
-      { expected_response:true }...: avg=351.33ms min=85.08µs med=263.52ms max=3.73s p(90)=750.98ms p(95)=936.1ms 
-    http_req_failed................: 0.00%  0 out of 412471
-    http_reqs......................: 412471 13562.526816/s
+    http_req_duration..............: avg=343.79ms min=70.84µs med=254.68ms max=3.3s  p(90)=732.13ms p(95)=921.55ms
+      { expected_response:true }...: avg=343.79ms min=70.84µs med=254.68ms max=3.3s  p(90)=732.13ms p(95)=921.55ms
+    http_req_failed................: 0.00%  0 out of 419723
+    http_reqs......................: 419723 13805.17042/s
 
     EXECUTION
-    iteration_duration.............: avg=364.52ms min=10.15ms med=276.34ms max=3.74s p(90)=762.59ms p(95)=947.84ms
-    iterations.....................: 412471 13562.526816/s
+    iteration_duration.............: avg=358.05ms min=10.13ms med=268.76ms max=3.31s p(90)=743.75ms p(95)=932.34ms
+    iterations.....................: 419723 13805.17042/s
     vus............................: 5000   min=5000        max=5000
     vus_max........................: 5000   min=5000        max=5000
 
     NETWORK
-    data_received..................: 591 MB 19 MB/s
-    data_sent......................: 35 MB  1.2 MB/s
+    data_received..................: 453 MB 15 MB/s
+    data_sent......................: 36 MB  1.2 MB/s
 
 
 
 
-running (0m30.4s), 0000/5000 VUs, 412471 complete and 0 interrupted iterations
+running (0m30.4s), 0000/5000 VUs, 419723 complete and 0 interrupted iterations
 default ✓ [======================================] 5000 VUs  30s

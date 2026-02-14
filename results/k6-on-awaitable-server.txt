@@ -17,30 +17,30 @@
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 431224  7178.757096/s
-    checks_succeeded...: 100.00% 431224 out of 431224
-    checks_failed......: 0.00%   0 out of 431224
+    checks_total.......: 441590  14526.615641/s
+    checks_succeeded...: 100.00% 441590 out of 441590
+    checks_failed......: 0.00%   0 out of 441590
 
     ✓ status is 200
 
     HTTP
-    http_req_duration..............: avg=332.45ms min=35.02ms med=321.47ms max=12.76s p(90)=368.11ms p(95)=404.25ms
-      { expected_response:true }...: avg=332.45ms min=35.02ms med=321.47ms max=12.76s p(90)=368.11ms p(95)=404.25ms
-    http_req_failed................: 0.00%  0 out of 431224
-    http_reqs......................: 431224 7178.757096/s
+    http_req_duration..............: avg=328.18ms min=2.86ms  med=331.16ms max=3.66s p(90)=375.77ms p(95)=396.72ms
+      { expected_response:true }...: avg=328.18ms min=2.86ms  med=331.16ms max=3.66s p(90)=375.77ms p(95)=396.72ms
+    http_req_failed................: 0.00%  0 out of 441590
+    http_reqs......................: 441590 14526.615641/s
 
     EXECUTION
-    iteration_duration.............: avg=344.72ms min=45.74ms med=332.12ms max=12.77s p(90)=384.09ms p(95)=421.84ms
-    iterations.....................: 431224 7178.757096/s
-    vus............................: 3739   min=3739        max=5000
+    iteration_duration.............: avg=340.33ms min=12.99ms med=341.72ms max=3.84s p(90)=389.23ms p(95)=409.05ms
+    iterations.....................: 441590 14526.615641/s
+    vus............................: 5000   min=5000        max=5000
     vus_max........................: 5000   min=5000        max=5000
 
     NETWORK
-    data_received..................: 618 MB 10 MB/s
-    data_sent......................: 37 MB  616 kB/s
+    data_received..................: 477 MB 16 MB/s
+    data_sent......................: 38 MB  1.2 MB/s
 
 
 
 
-running (1m00.1s), 0000/5000 VUs, 431224 complete and 3739 interrupted iterations
+running (0m30.4s), 0000/5000 VUs, 441590 complete and 0 interrupted iterations
 default ✓ [======================================] 5000 VUs  30s

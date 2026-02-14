@@ -1,42 +1,61 @@
 # Plan
 
-- [x] Build simple TCP server with line-oriented protocol (verify using simple client): done on `97f06c0`
+- [x] Build simple TCP server with line-oriented protocol (verify using simple client)
   - Request `hello\n` -> response `world\n`
   - Start from [blocking_tcp_server.cpp](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/example/cpp11/echo/blocking_tcp_echo_server.cpp) and [blocking_tcp_client.cpp](https://www.boost.org/doc/libs/latest/doc/html/boost_asio/example/cpp11/echo/blocking_tcp_echo_client.cpp): both examples are from cpp14 examples; cpp17 and cpp20 examples are all about coroutines
 
-- [x] Check reference implementation with Nginx: done on `0f4de49`
+- [x] Check reference implementation with Nginx
   - Spawn a static file server using Nginx using `./run.sh` in Nginx folder
   - Verify and record headers with `curl -v -o /dev/null http://127.0.0.1:8080/files/README.md`
   - Saved record is in `result/curl-output.txt`
 
-- [x] Change line-oriented protocol to HTTP: done on `53bde65`
+- [x] Change line-oriented protocol to HTTP, serve file by having response header and contents on RAM
   - Change your server and client to use \r\n\r\n as delimeter
   - change "hello\n" -> "world\n" to GET request -> 200 OK response which you stored in previous step
-  - You may need to put additional file contents or you can modify Content-Length as 0 for test
+  - You need to have file contents on RAM: see below
+
+    ```
+    template <typename Executor> struct ReadmeContent {
+
+        ReadmeContent(Executor &executor) {
+            auto file = net::stream_file(executor, "README.md",
+                                         net::stream_file::flags::read_only);
+            buffer.resize(file.size());
+
+            net::read(file, net::buffer(buffer));
+        }
+
+        const std::vector<char> &get() { return buffer; }
+
+        std::vector<char> buffer;
+    };
+    ```
   - Test your server using curl
 
-- [x] Implement a static file server using boost asio, but using synchronous I/O: Done on `8fda810`
+- [x] Implement a static file server using boost asio, but using synchronous I/O
   - Test sync file operation using boost::asio on `test_streamfile.cpp`
-  - Without having real parsing on request, implement response part only
+  - Implement `server.cpp` which serves `README.md` file
+  - Without having real parsing on request, just serve already read file content with proper response header
 
-- [x] Test the static file server using k6 (load testing tool): done on `99cbbfc`
+- [x] Test the static file server using k6 (load testing tool)
   - Run Nginx using port 8080, run server using port 8081
   - Run k6 according to the instruction in `k6/README.md`
   - Results are stored as `result/k6-on-nginx.txt` and `result/k6-on-our-server.txt`
 
 
-- [x] Write it async using callbacks: done on `0f02ded`
+- [x] Write it async using callbacks
   - Compare these two implementations `example/asio/blocking_tcp_echo_server.cpp` and `example/asio/callback_async_echo_server.cpp`
   - Implement `callback_server.cpp` like given async example
   - Run `io_context` on multiple threads
   - Make file io also async
   - Compare performance using k6
 
-- [x] Write it async using coroutines: done on `c314844`
+- [x] Write it async using coroutines
   - Compare these two implementations `example/asio/callback_async_echo_server.cpp` and `example/asio/awaitable_async_echo_server.cpp` 
   - Compare these two implementations `example/asio/blocking_tcp_echo_server.cpp` and `example/asio/awaitable_async_echo_server.cpp`
   - Write `callback_server.cpp` and `awaitable_server.cpp` like given asio example
   - Compare performance using k6
+
 
 ---
 

@@ -13,13 +13,23 @@ using namespace std::string_view_literals;
 
 const int max_length = 1024;
 
-net::stream_file open_file(net::io_context &io_context,
-                           const std::string &path) {
-    net::stream_file file(io_context, path, net::stream_file::flags::read_only);
-    return file;
-}
+struct ReadmeContent {
 
-void session(net::io_context &io_context, tcp::socket sock) {
+    ReadmeContent(net::io_context &io_context) {
+        auto file = net::stream_file(io_context, "README.md",
+                                     net::stream_file::flags::read_only);
+        buffer.resize(file.size());
+
+        net::read(file, net::buffer(buffer));
+    }
+
+    const std::vector<char> &get() { return buffer; }
+
+    std::vector<char> buffer;
+};
+
+void session(net::io_context &io_context, tcp::socket sock,
+             ReadmeContent &content) {
     try {
         auto sbuf = net::streambuf(max_length);
         for (;;) {
@@ -28,10 +38,6 @@ void session(net::io_context &io_context, tcp::socket sock) {
             sbuf.consume(len);
 
             try {
-                auto file = open_file(io_context, "README.md");
-                std::vector<char> buffer(file.size());
-
-                net::read(file, net::buffer(buffer));
                 // open_file(io_context
                 constexpr auto header_template =
                     "HTTP/1.1 200 OK\r\n"
@@ -45,7 +51,8 @@ void session(net::io_context &io_context, tcp::socket sock) {
                     "Accept-Ranges: bytes\r\n"
                     "\r\n"sv;
 
-                auto header = std::format(header_template, file.size());
+                auto buffer = content.get();
+                auto header = std::format(header_template, buffer.size());
 
                 auto write_len = net::write(
                     sock, std::array<net::const_buffer, 2>{
@@ -73,9 +80,12 @@ void session(net::io_context &io_context, tcp::socket sock) {
 }
 
 void server(net::io_context &io_context, unsigned short port) {
+    ReadmeContent content{io_context};
     tcp::acceptor a(io_context, tcp::endpoint(tcp::v4(), port));
     for (;;) {
-        std::thread(session, std::ref(io_context), a.accept()).detach();
+        std::thread(session, std::ref(io_context), a.accept(),
+                    std::ref(content))
+            .detach();
     }
 }
 
