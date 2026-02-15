@@ -24,15 +24,3 @@ export BUILD_TYPE=Debug
 ```{bash}
 cmake -B $BUILD_TYPE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 ```
-
-<!-- ## Test -->
-<!---->
-<!-- ```{bash} -->
-<!-- cmake --build $BUILD_TYPE && ./$BUILD_TYPE/test/calc/calc_test -->
-<!-- ``` -->
-<!---->
-<!-- ## Benchmark -->
-<!---->
-<!-- ```{bash} -->
-<!-- cmake --build $BUILD_TYPE && python3 ./$BUILD_TYPE/compare.py filters ./$BUILD_TYPE/test/calc/calc_benchmark UseSet UseRuntimeConfigurableSet -->
-<!-- ``` -->
