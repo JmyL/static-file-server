@@ -16,7 +16,12 @@ on:
 
 jobs:
   test-server:
+    permissions:
+      contents: read
+      packages: write
+
     runs-on: ubuntu-latest
+
     env:
       SERVER_IMAGE: ${{ github.event.inputs.server_image }}
 
