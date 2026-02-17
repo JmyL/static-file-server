@@ -17,6 +17,9 @@ on:
 jobs:
   test-server:
     runs-on: ubuntu-latest
+    env:
+      SERVER_IMAGE: ${{ github.event.inputs.server_image }}
+      REPO: ${{ github.repository.toLowerCase() }}
 
     steps:
       - name: Checkout repository
@@ -29,14 +32,10 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u jmyl --password-stdin
 
       - name: Build server Docker image
-        env:
-          SERVER_IMAGE: ${{ github.event.inputs.server_image }}
-        run: docker build -f docker/Dockerfile --build-arg TARGET=${SERVER_IMAGE} -t ghcr.io/${{ github.repository }}/${SERVER_IMAGE}:latest .
+        run: docker build -f docker/Dockerfile --build-arg TARGET=${SERVER_IMAGE} -t ghcr.io/${REPO}/${SERVER_IMAGE}:latest .
 
       - name: Push server Docker image
-        env:
-          SERVER_IMAGE: ${{ github.event.inputs.server_image }}
-        run: docker push ghcr.io/jmyl/${{ github.repository }}/${SERVER_IMAGE}:latest
+        run: docker push ghcr.io/jmyl/${REPO}/${SERVER_IMAGE}:latest
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
@@ -48,13 +47,11 @@ jobs:
         run: terraform -chdir=infra apply -auto-approve
 
       - name: Terraform Apply
-        env:
-          SERVER_IMAGE: ${{ github.event.inputs.server_image }}
         run: |
           if [ "$SERVER_IMAGE" = "nginx" ]; then
             terraform -chdir=infra apply -auto-approve -var="server_image=nginx:latest"
           else
-            terraform -chdir=infra apply -auto-approve -var="server_image=ghcr.io/${{ github.repository }}/${SERVER_IMAGE}:latest"
+            terraform -chdir=infra apply -auto-approve -var="server_image=ghcr.io/${REPO}/${SERVER_IMAGE}:latest"
           fi
 
       - name: Get EC2 Public IP
