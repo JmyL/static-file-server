@@ -12,6 +12,6 @@ RUN git clone https://github.com/jmyl/static-file-server.git .
 RUN cmake -B build -DCMAKE_BUILD_TYPE=Release
 RUN cmake --build build --target $TARGET
 
-EXPOSE 8080
+EXPOSE 80
 
-ENTRYPOINT ["sh", "-c", "./build/$TARGET 8080"]
+ENTRYPOINT ["sh", "-c", "./build/bin/server/$TARGET 80"]
