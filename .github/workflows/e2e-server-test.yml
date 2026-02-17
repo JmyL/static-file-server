@@ -26,13 +26,17 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
-        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u jmyl --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u jmyl --password-stdin
 
       - name: Build server Docker image
-        run: docker build -f Dockerfile.server -t ghcr.io/jmyl/server:latest .
+        env:
+          SERVER_IMAGE: ${{ github.event.inputs.server_image }}
+        run: docker build -f docker/Dockerfile --build-arg TARGET=${SERVER_IMAGE} -t ghcr.io/${{ github.repository }}/${SERVER_IMAGE}:latest .
 
       - name: Push server Docker image
-        run: docker push ghcr.io/jmyl/server:latest
+        env:
+          SERVER_IMAGE: ${{ github.event.inputs.server_image }}
+        run: docker push ghcr.io/jmyl/${{ github.repository }}/${SERVER_IMAGE}:latest
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
@@ -43,29 +47,20 @@ jobs:
       - name: Terraform Apply
         run: terraform -chdir=infra apply -auto-approve
 
+      - name: Terraform Apply
+        env:
+          SERVER_IMAGE: ${{ github.event.inputs.server_image }}
+        run: |
+          if [ "$SERVER_IMAGE" = "nginx" ]; then
+            terraform -chdir=infra apply -auto-approve -var="server_image=nginx:latest"
+          else
+            terraform -chdir=infra apply -auto-approve -var="server_image=ghcr.io/${{ github.repository }}/${SERVER_IMAGE}:latest"
+          fi
+
       - name: Get EC2 Public IP
         id: get_ip
         run: |
           echo "ip=$(terraform -chdir=infra output -raw public_ip)" >> $GITHUB_OUTPUT
-
-      - name: Write SSH key
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2-key.pem
-          chmod 400 ~/.ssh/ec2-key.pem
-
-      - name: Replace server container
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/ec2-key.pem ubuntu@${{ steps.get_ip.outputs.ip }} "
-            if [ '${{ env.SERVER_IMAGE }}' = 'nginx' ]; then
-              sudo docker pull nginx:latest
-              sudo docker run -d --name test-server -p 80:80 nginx:latest
-            else
-              sudo docker pull ghcr.io/jmyl/${{ env.SERVER_IMAGE }}:latest
-              sudo docker run -d --name test-server -p 80:80 ghcr.io/jmyl/${{ env.SERVER_IMAGE }}:latest
-            fi
-          "
-        env:
-          SERVER_IMAGE: ${{ github.event.inputs.server_image }}
 
       - name: Wait for server to be ready
         run: |
@@ -83,8 +78,10 @@ jobs:
       - name: Run k6 cloud test
         env:
           K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+          TARGET_HOSTNAME: ${{ steps.get_ip.outputs.ip }}
         run: |
-          k6 cloud --token $K6_CLOUD_TOKEN --env TARGET_URL="http://${{ steps.get_ip.outputs.ip }}/files/README.md" k6/script.js
+          k6 cloud login --token $K6_CLOUD_TOKEN 
+          k6 cloud run k6/script.js
 
       - name: Terraform Destroy
         if: always()
