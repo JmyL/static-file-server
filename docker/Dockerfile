@@ -1,6 +1,7 @@
 FROM ubuntu:24.04
 
 ARG TARGET=awaitable_server
+ENV TARGET=${TARGET}
 
 RUN apt-get update && \
     apt-get install -y build-essential cmake git libboost-all-dev liburing-dev
@@ -14,4 +15,4 @@ RUN cmake --build build --target $TARGET
 
 EXPOSE 80
 
-ENTRYPOINT ["sh", "-c", "./build/bin/server/$TARGET 80"]
+ENTRYPOINT ["sh", "-c", "exec build/bin/server/$TARGET 80"]
