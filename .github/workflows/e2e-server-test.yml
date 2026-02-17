@@ -19,9 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SERVER_IMAGE: ${{ github.event.inputs.server_image }}
-      REPO: ${{ github.repository.toLowerCase() }}
 
     steps:
+      - name: Convert repository to lowercase
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY@L}" >> $GITHUB_ENV
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
