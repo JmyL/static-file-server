@@ -1,0 +1,91 @@
+name: Manual Test, Docker Build/Push + EC2 + k6 Load Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_image:
+        description: "Which server image to test?"
+        required: true
+        default: "server"
+        type: choice
+        options:
+          - server
+          - callback_server
+          - awaitable_server
+          - nginx
+
+jobs:
+  test-server:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u jmyl --password-stdin
+
+      - name: Build server Docker image
+        run: docker build -f Dockerfile.server -t ghcr.io/jmyl/server:latest .
+
+      - name: Push server Docker image
+        run: docker push ghcr.io/jmyl/server:latest
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform -chdir=infra init
+
+      - name: Terraform Apply
+        run: terraform -chdir=infra apply -auto-approve
+
+      - name: Get EC2 Public IP
+        id: get_ip
+        run: |
+          echo "ip=$(terraform -chdir=infra output -raw public_ip)" >> $GITHUB_OUTPUT
+
+      - name: Write SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2-key.pem
+          chmod 400 ~/.ssh/ec2-key.pem
+
+      - name: Replace server container
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/ec2-key.pem ubuntu@${{ steps.get_ip.outputs.ip }} "
+            if [ '${{ env.SERVER_IMAGE }}' = 'nginx' ]; then
+              sudo docker pull nginx:latest
+              sudo docker run -d --name test-server -p 80:80 nginx:latest
+            else
+              sudo docker pull ghcr.io/jmyl/${{ env.SERVER_IMAGE }}:latest
+              sudo docker run -d --name test-server -p 80:80 ghcr.io/jmyl/${{ env.SERVER_IMAGE }}:latest
+            fi
+          "
+        env:
+          SERVER_IMAGE: ${{ github.event.inputs.server_image }}
+
+      - name: Wait for server to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -sSf "http://${{ steps.get_ip.outputs.ip }}/files/README.md" > /dev/null; then
+              echo "Server is up!"
+              exit 0
+            fi
+            echo "Waiting for server..."
+            sleep 10
+          done
+          echo "Server did not become ready in time." >&2
+          exit 1
+
+      - name: Run k6 cloud test
+        env:
+          K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+        run: |
+          k6 cloud --token $K6_CLOUD_TOKEN --env TARGET_URL="http://${{ steps.get_ip.outputs.ip }}/files/README.md" k6/script.js
+
+      - name: Terraform Destroy
+        if: always()
+        run: terraform -chdir=infra destroy -auto-approve
