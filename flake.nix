@@ -6,16 +6,22 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = import nixpkgs { system = system; };
-      in with pkgs; {
+  outputs = {
+    self,
+    nixpkgs,
+    flake-utils,
+  }:
+    flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = import nixpkgs {system = system;};
+    in
+      with pkgs; {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             clang
             ninja
             cmake
             ccache
+            liburing
             boost.dev
             cppcheck
             doxygen
