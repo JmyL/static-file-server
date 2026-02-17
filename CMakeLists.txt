@@ -7,7 +7,7 @@ include(CPM.cmake)
 CPMAddPackage(
     NAME cmake_modules
     GITHUB_REPOSITORY JmyL/cmake-modules
-    VERSION 0.1.9
+    VERSION 0.1.14
 )
 list(APPEND CMAKE_MODULE_PATH ${cmake_modules_SOURCE_DIR})
 
