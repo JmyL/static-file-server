@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.20.0)
-cmake_policy(SET CMP0167 NEW)
 
 project(static_file_server VERSION 1.0.0 LANGUAGES CXX)
 
