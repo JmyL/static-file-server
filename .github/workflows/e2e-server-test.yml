@@ -58,14 +58,12 @@ jobs:
         run: terraform -chdir=infra init
 
       - name: Terraform Apply
-        run: terraform -chdir=infra apply -auto-approve
-
-      - name: Terraform Apply
         run: |
           if [ "$SERVER_IMAGE" = "nginx" ]; then
             terraform -chdir=infra apply -auto-approve -var="server_image=nginx:latest"
           else
             terraform -chdir=infra apply -auto-approve -var="server_image=ghcr.io/${REPO}/${SERVER_IMAGE}:latest"
+            # terraform -chdir=infra apply -auto-approve -var="server_image=ghcr.io/jmyl/static-file-server/server:latest"
           fi
 
       - name: Get EC2 Public IP
@@ -90,6 +88,7 @@ jobs:
         env:
           K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
           TARGET_HOSTNAME: ${{ steps.get_ip.outputs.ip }}
+          TARGET_PORT: 80
         run: |
           k6 cloud login --token $K6_CLOUD_TOKEN 
           k6 cloud run k6/script.js
