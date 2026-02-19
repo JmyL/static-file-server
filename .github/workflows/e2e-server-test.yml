@@ -63,7 +63,6 @@ jobs:
             terraform -chdir=infra apply -auto-approve -var="server_image=nginx:latest"
           else
             terraform -chdir=infra apply -auto-approve -var="server_image=ghcr.io/${REPO}/${SERVER_IMAGE}:latest"
-            # terraform -chdir=infra apply -auto-approve -var="server_image=ghcr.io/jmyl/static-file-server/server:latest"
           fi
 
       - name: Get EC2 Public IP
@@ -83,6 +82,13 @@ jobs:
           done
           echo "Server did not become ready in time." >&2
           exit 1
+
+      - name: Install k6
+        run: |
+          curl -s https://dl.k6.io/key.gpg | sudo apt-key add -
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
 
       - name: Run k6 cloud test
         env:
