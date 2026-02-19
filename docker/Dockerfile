@@ -15,4 +15,4 @@ RUN cmake --build build --target $TARGET
 
 EXPOSE 80
 
-ENTRYPOINT ["sh", "-c", "exec build/bin/server/$TARGET 80"]
+ENTRYPOINT build/bin/server/$TARGET 80
