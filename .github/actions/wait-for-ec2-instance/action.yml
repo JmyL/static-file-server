@@ -1,0 +1,43 @@
+name: Wait for EC2 Instance (SSM)
+description: Waits until the given EC2 instance is reachable via SSM.
+inputs:
+  instance_id:
+    description: EC2 instance ID
+    required: true
+  region:
+    description: AWS region
+    required: true
+  timeout:
+    description: Timeout in seconds (default: 300)
+    required: false
+    default: "300"
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        INSTANCE_ID="${{ inputs.instance_id }}"
+        REGION="${{ inputs.region }}"
+        TIMEOUT="${{ inputs.timeout }}"
+        INTERVAL=10
+        ELAPSED=0
+
+        echo "Waiting for EC2 instance $INSTANCE_ID to be ready via SSM..."
+
+        while [[ $ELAPSED -lt $TIMEOUT ]]; do
+          SSM_STATUS=$(aws ssm describe-instance-information \
+            --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+            --region "$REGION" \
+            --query "InstanceInformationList[0].PingStatus" \
+            --output text)
+          echo "SSM status: $SSM_STATUS"
+          if [[ "$SSM_STATUS" == "Online" ]]; then
+            echo "Instance is ready!"
+            exit 0
+          fi
+          sleep $INTERVAL
+          ELAPSED=$((ELAPSED + INTERVAL))
+        done
+
+        echo "Timeout waiting for instance to be ready."
+        exit 1
