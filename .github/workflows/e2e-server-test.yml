@@ -73,12 +73,12 @@ jobs:
           echo "ip=$(terraform -chdir=infra output -raw public_ip)" >> $GITHUB_OUTPUT
           echo "instance_id=$(terraform -chdir=infra output -raw k6_test_instance_id)" >> $GITHUB_OUTPUT
 
-      - name: Wait for test_server EC2 instance to be ready
-        uses: jakejarvis/wait-for-ec2-instance-ready@v1
-        with:
-          instance-id: ${{ steps.test_server.outputs.instance_id }}
-          region: ${{ env.AWS_REGION }}
-          timeout: 300
+      # - name: Wait for test_server EC2 instance to be ready
+      #   uses: jakejarvis/wait-for-ec2-instance-ready@v1
+      #   with:
+      #     instance-id: ${{ steps.test_server.outputs.instance_id }}
+      #     region: ${{ env.AWS_REGION }}
+      #     timeout: 300
 
       - name: Run server application
         if: ${{ env.SERVER_IMAGE != 'nginx' }}
@@ -118,12 +118,12 @@ jobs:
             docker cp /tmp/test.csv static-server:/usr/share/nginx/html
             docker exec server nginx -s reload
 
-      - name: Wait for k6_test EC2 instance to be ready
-        uses: jakejarvis/wait-for-ec2-instance-ready@v1
-        with:
-          instance-id: ${{ steps.k6_test.outputs.instance_id }}
-          region: ${{ env.AWS_REGION }}
-          timeout: 300
+      # - name: Wait for k6_test EC2 instance to be ready
+      #   uses: jakejarvis/wait-for-ec2-instance-ready@v1
+      #   with:
+      #     instance-id: ${{ steps.k6_test.outputs.instance_id }}
+      #     region: ${{ env.AWS_REGION }}
+      #     timeout: 300
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
