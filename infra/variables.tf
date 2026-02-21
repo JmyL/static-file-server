@@ -1,5 +1,5 @@
-variable "server_image" {
-  description = "Docker image to run on the server"
+variable "region" {
+  description = "Region where the EC2 instances will be created"
   type        = string
-  default     = "ghcr.io/jmyl/server:latest"
+  default     = "eu-central-1"
 }

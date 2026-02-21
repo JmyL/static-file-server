@@ -26,7 +26,7 @@ jobs:
       SERVER_IMAGE: ${{ github.event.inputs.server_image }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_REGION: eu-central-1
 
     steps:
       - name: Convert repository to lowercase
@@ -45,11 +45,11 @@ jobs:
 
       - name: Build server Docker image
         if: ${{ env.SERVER_IMAGE != 'nginx' }}
-        run: docker build -f docker/Dockerfile --build-arg TARGET=${SERVER_IMAGE} -t ghcr.io/${REPO}/${SERVER_IMAGE}:latest .
+        run: docker build -f docker/Dockerfile --build-arg TARGET=${SERVER_IMAGE} -t ghcr.io/${REPO}/server:latest .
 
       - name: Push server Docker image
         if: ${{ env.SERVER_IMAGE != 'nginx' }}
-        run: docker push ghcr.io/${REPO}/${SERVER_IMAGE}:latest
+        run: docker push ghcr.io/${REPO}/server:latest
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
@@ -59,45 +59,99 @@ jobs:
 
       - name: Terraform Apply
         run: |
-          if [ "$SERVER_IMAGE" = "nginx" ]; then
-            terraform -chdir=infra apply -auto-approve -var="server_image=nginx:latest"
-          else
-            terraform -chdir=infra apply -auto-approve -var="server_image=ghcr.io/${REPO}/${SERVER_IMAGE}:latest"
-          fi
+          terraform -chdir=infra apply -auto-approve -var region=${{ env.AWS_REGION }}
 
-      - name: Get EC2 Public IP
-        id: get_ip
+      - name: Get test_server information
+        id: test_server
         run: |
           echo "ip=$(terraform -chdir=infra output -raw public_ip)" >> $GITHUB_OUTPUT
+          echo "instance_id=$(terraform -chdir=infra output -raw k6_test_instance_id)" >> $GITHUB_OUTPUT
 
-      - name: Wait for server to be ready
+      - name: Get k6_test information
+        id: k6_test
         run: |
-          for i in {1..30}; do
-            if curl -sSf "http://${{ steps.get_ip.outputs.ip }}/files/README.md" > /dev/null; then
-              echo "Server is up!"
-              exit 0
-            fi
-            echo "Waiting for server..."
-            sleep 10
-          done
-          echo "Server did not become ready in time." >&2
-          exit 1
+          echo "ip=$(terraform -chdir=infra output -raw public_ip)" >> $GITHUB_OUTPUT
+          echo "instance_id=$(terraform -chdir=infra output -raw k6_test_instance_id)" >> $GITHUB_OUTPUT
 
-      - name: Install k6
+      - name: Wait for test_server EC2 instance to be ready
+        uses: jakejarvis/wait-for-ec2-instance-ready@v1
+        with:
+          instance-id: ${{ steps.test_server.outputs.instance_id }}
+          region: ${{ env.AWS_REGION }}
+          timeout: 300
+
+      - name: Run server application
+        if: ${{ env.SERVER_IMAGE != 'nginx' }}
+        uses: aws-actions/aws-ssm-run-command@v1
+        with:
+          instance-ids: ${{ steps.test_server.outputs.instance_id }}
+          document-name: AWS-RunShellScript
+          parameters: |
+            commands:
+              - docker run -d --name server --security-opt seccomp=unconfined -p 80:80 --entrypoint build/bin/server/${{ github.event.inputs.server_image }} ghcr.io/${REPO}/server:latest 80
+              - curl https://img.exim.gov/s3fs-public/dataset/vbhv-d8am/Data.Gov_-_FY25_Q3.csv -o /app/test.csv
+          region: ${{ env.AWS_REGION }}
+
+      - name: Encode nginx.conf to base64
+        if: ${{ env.SERVER_IMAGE == 'nginx' }}
+        id: encode_nginx
         run: |
-          curl -s https://dl.k6.io/key.gpg | sudo apt-key add -
-          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update
-          sudo apt-get install k6
+          base64 -w 0 Nginx/nginx.conf > nginx.conf.b64
+          echo "NGINX_CONF_B64=$(cat nginx.conf.b64)" >> $GITHUB_ENV
 
-      - name: Run k6 cloud test
+      - name: Run Nginx
+        if: ${{ env.SERVER_IMAGE == 'nginx' }}
+        uses: aws-actions/aws-ssm-run-command@v1
+        with:
+          instance-ids: ${{ steps.test_server.outputs.instance_id }}
+          document-name: AWS-RunShellScript
+          parameters: |
+            commands:
+              - echo "${{ env.NGINX_CONF_B64 }}" | base64 -d > /tmp/nginx.conf
+              - docker run -d --name server -p 80:80 -v /tmp/nginx.conf:/etc/nginx/nginx.conf:ro nginx:alpine
+              - curl https://img.exim.gov/s3fs-public/dataset/vbhv-d8am/Data.Gov_-_FY25_Q3.csv -o /tmp/test.csv
+              - docker cp /tmp/test.csv static-server:/usr/share/nginx/html
+              - docker exec server nginx -s reload
+          region: ${{ env.AWS_REGION }}
+
+      - name: Wait for k6_test EC2 instance to be ready
+        uses: jakejarvis/wait-for-ec2-instance-ready@v1
+        with:
+          instance-id: ${{ steps.k6_test.outputs.instance_id }}
+          region: ${{ env.AWS_REGION }}
+          timeout: 300
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Run k6 test
         env:
-          K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
-          TARGET_HOSTNAME: ${{ steps.get_ip.outputs.ip }}
+          TARGET_HOSTNAME: ${{ steps.test_server.outputs.ip }}
           TARGET_PORT: 80
-        run: |
-          k6 cloud login --token $K6_CLOUD_TOKEN 
-          k6 cloud run k6/script.js
+          DOWNLOAD_PATH: test.csv
+          K6_WEB_DASHBOARD: true
+          K6_WEB_DASHBOARD_EXPORT: /tmp/html-report.html
+        uses: aws-actions/aws-ssm-run-command@v1
+        with:
+          instance-ids: ${{ steps.k6_test.outputs.instance_id }}
+          document-name: AWS-RunShellScript
+          parameters: |
+            commands:
+              - k6 run k6/script.js
+              - aws s3 cp ${{ env.K6_WEB_DASHBOARD_EXPORT }} s3://static-file-server/k6-result-${{ github.run_id }}.json
+          region: ${{ env.AWS_REGION }}
+
+      - name: Download k6 result from S3
+        run: aws s3 cp s3://static-file-server/k6-result-${{ github.run_id }}.json ./k6-result.json
+
+      - name: Upload k6 result as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-result
+          path: ./k6-result.json
 
       - name: Terraform Destroy
         if: always()
