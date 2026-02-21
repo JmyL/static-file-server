@@ -64,13 +64,12 @@ jobs:
       - name: Get test_server information
         id: test_server
         run: |
-          echo "ip=$(terraform -chdir=infra output -raw public_ip)" >> $GITHUB_OUTPUT
-          echo "instance_id=$(terraform -chdir=infra output -raw k6_test_instance_id)" >> $GITHUB_OUTPUT
+          echo "ip=$(terraform -chdir=infra output -raw test_server_public_ip)" >> $GITHUB_OUTPUT
+          echo "instance_id=$(terraform -chdir=infra output -raw test_server_instance_id)" >> $GITHUB_OUTPUT
 
       - name: Get k6_test information
         id: k6_test
         run: |
-          echo "ip=$(terraform -chdir=infra output -raw public_ip)" >> $GITHUB_OUTPUT
           echo "instance_id=$(terraform -chdir=infra output -raw k6_test_instance_id)" >> $GITHUB_OUTPUT
 
       # - name: Wait for test_server EC2 instance to be ready
