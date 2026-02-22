@@ -7,5 +7,5 @@ variable "region" {
 variable "s3_bucket" {
   description = "S3 bucket name for saving artifacts"
   type        = string
-  default     = "jmyl-tmp-files"
+  default     = "jmyl-github-actions-artifacts"
 }
