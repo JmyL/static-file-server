@@ -28,9 +28,15 @@ resource "aws_iam_role_policy" "ssm_s3_policy" {
         Effect = "Allow",
         Action = [
           "s3:PutObject",
-          "s3:GetObject"
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:HeadObject"
+          "s3:ListBucket"
         ],
-        Resource = "arn:aws:s3:::static-file-server/*"
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket}/*"
+          "arn:aws:s3:::${var.s3_bucket}"
+        ]
       }
     ]
   })
