@@ -30,7 +30,7 @@ resource "aws_iam_role_policy" "ssm_s3_policy" {
           "s3:PutObject",
           "s3:GetObject",
           "s3:DeleteObject",
-          "s3:HeadObject"
+          "s3:HeadObject",
           "s3:ListBucket"
         ],
         Resource = [
