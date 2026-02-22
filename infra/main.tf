@@ -67,6 +67,7 @@ resource "aws_instance" "k6_test" {
   security_groups      = [aws_security_group.test_server_sg.name]
   user_data            = file("${path.module}/user_data_load_test.sh")
   iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
+  key_name             = "dev-machine-usage"
 
   tags = {
     Name = "k6-test"
@@ -78,6 +79,9 @@ output "test_server_public_ip" {
 }
 output "test_server_instance_id" {
   value = aws_instance.test_server.id
+}
+output "k6_test_public_ip" {
+  value = aws_instance.k6_test.public_ip
 }
 output "k6_test_instance_id" {
   value = aws_instance.k6_test.id
