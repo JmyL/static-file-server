@@ -28,6 +28,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: eu-central-1
       S3_BUCKET: jmyl-github-actions-artifacts
+      TARGET_FILE: README.md
 
     steps:
       - name: Convert repository to lowercase
@@ -76,6 +77,25 @@ jobs:
         run: |
           echo "instance_id=$(terraform -chdir=infra output -raw k6_test_instance_id)" >> $GITHUB_OUTPUT
 
+      - name: Upload relevant files to S3
+        env:
+          TARGET_HOSTNAME: ${{ steps.test_server.outputs.ip }}
+          TARGET_PORT: 80
+          DOWNLOAD_PATH: ${{ env.TARGET_FILE }}
+          K6_WEB_DASHBOARD: true
+          K6_WEB_DASHBOARD_EXPORT: /tmp/html-report.html
+        uses: peterkimzz/aws-ssm-send-command@master
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          instance-ids: ${{ steps.k6_test.outputs.instance_id }}
+
+          working-directory: /tmp
+          command: |
+            aws s3 cp Nginx/nginx.conf s3://${{ env.S3_BUCKET }}/nginx.conf
+            aws s3 cp ${{ env.TARGET_FILE }} s3://${{ env.S3_BUCKET }}/${{ env.TARGET_FILE }}
+
       - name: Wait for test_server EC2 instance to be ready
         uses: ./.github/actions/wait-for-ec2-instance
         with:
@@ -94,14 +114,8 @@ jobs:
           working-directory: /app
           command: |
             docker run -d --name server --security-opt seccomp=unconfined -p 80:80 --entrypoint build/bin/server/${{ github.event.inputs.server_image }} ghcr.io/${REPO}/server:latest 80
-            curl https://img.exim.gov/s3fs-public/dataset/vbhv-d8am/Data.Gov_-_FY25_Q3.csv -o /app/test.csv
-
-      - name: Encode nginx.conf to base64
-        if: ${{ env.SERVER_IMAGE == 'nginx' }}
-        id: encode_nginx
-        run: |
-          base64 -w 0 Nginx/nginx.conf > nginx.conf.b64
-          echo "NGINX_CONF_B64=$(cat nginx.conf.b64)" >> $GITHUB_ENV
+            # curl https://img.exim.gov/s3fs-public/dataset/vbhv-d8am/Data.Gov_-_FY25_Q3.csv -o /tmp/test.csv
+            # docker cp /tmp/test.csv server:/app
 
       - name: Run Nginx
         if: ${{ env.SERVER_IMAGE == 'nginx' }}
@@ -114,10 +128,11 @@ jobs:
 
           working-directory: /tmp
           command: |
-            echo "${{ env.NGINX_CONF_B64 }}" | base64 -d > /tmp/nginx.conf
+            aws cp s3://${{ env.S3_BUCKET }}/nginx.conf nginx.conf
             docker run -d --name server -p 80:80 -v /tmp/nginx.conf:/etc/nginx/nginx.conf:ro nginx:alpine
-            curl https://img.exim.gov/s3fs-public/dataset/vbhv-d8am/Data.Gov_-_FY25_Q3.csv -o /tmp/test.csv
-            docker cp /tmp/test.csv static-server:/usr/share/nginx/html
+            # curl https://img.exim.gov/s3fs-public/dataset/vbhv-d8am/Data.Gov_-_FY25_Q3.csv -o /tmp/test.csv
+            aws s3 cp s3://${{ env.S3_BUCKET }}/${{ env.TARGET_FILE }} ${{ env.TARGET_FILE }} 
+            docker cp ${{ env.TARGET_FILE }}  server:/usr/share/nginx/html/
             docker exec server nginx -s reload
 
       - name: Wait for k6_test EC2 instance to be ready
