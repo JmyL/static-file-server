@@ -106,6 +106,7 @@ jobs:
 
           working-directory: /app
           command: |
+            while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done
             docker run -d --name server --security-opt seccomp=unconfined -p 80:80 --entrypoint build/bin/server/${{ github.event.inputs.server_image }} ghcr.io/${REPO}/server:latest 80
             # curl https://img.exim.gov/s3fs-public/dataset/vbhv-d8am/Data.Gov_-_FY25_Q3.csv -o /tmp/test.csv
             # docker cp /tmp/test.csv server:/app
@@ -121,6 +122,7 @@ jobs:
 
           working-directory: /tmp
           command: |
+            while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done
             aws cp s3://${{ env.S3_BUCKET }}/nginx.conf nginx.conf
             docker run -d --name server -p 80:80 -v /tmp/nginx.conf:/etc/nginx/nginx.conf:ro nginx:alpine
             # curl https://img.exim.gov/s3fs-public/dataset/vbhv-d8am/Data.Gov_-_FY25_Q3.csv -o /tmp/test.csv
@@ -152,6 +154,7 @@ jobs:
 
           working-directory: /tmp
           command: |
+            while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done
             k6 run k6/script.js
             aws s3 cp ${{ env.K6_WEB_DASHBOARD_EXPORT }} s3://${{ env.S3_BUCKET }}/k6-result-${{ github.run_id }}.html
 
