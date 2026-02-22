@@ -34,7 +34,7 @@ resource "aws_iam_role_policy" "ssm_s3_policy" {
           "s3:ListBucket"
         ],
         Resource = [
-          "arn:aws:s3:::${var.s3_bucket}/*"
+          "arn:aws:s3:::${var.s3_bucket}/*",
           "arn:aws:s3:::${var.s3_bucket}"
         ]
       }
