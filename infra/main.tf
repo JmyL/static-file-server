@@ -13,6 +13,15 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
+resource "aws_s3_bucket" "static_file_server" {
+  bucket = var.s3_bucket
+  force_destroy = true 
+
+  tags = {
+    Name        = "static-file-server"
+  }
+}
+
 resource "aws_security_group" "test_server_sg" {
   name        = "test-server-sg"
   description = "Allow HTTP and SSH"

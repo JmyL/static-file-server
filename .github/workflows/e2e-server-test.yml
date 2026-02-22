@@ -27,6 +27,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: eu-central-1
+      S3_BUCKET: jmyl-github-actions-artifacts
 
     steps:
       - name: Convert repository to lowercase
@@ -58,8 +59,11 @@ jobs:
         run: terraform -chdir=infra init
 
       - name: Terraform Apply
+        env:
+          TF_VAR_region: ${{ env.AWS_REGION }}
+          TF_VAR_s3_bucket: ${{ env.S3_BUCKET }}
         run: |
-          terraform -chdir=infra apply -auto-approve -var region=${{ env.AWS_REGION }}
+          terraform -chdir=infra apply -auto-approve
 
       - name: Get test_server information
         id: test_server
@@ -147,10 +151,10 @@ jobs:
           working-directory: /tmp
           command: |
             k6 run k6/script.js
-            aws s3 cp ${{ env.K6_WEB_DASHBOARD_EXPORT }} s3://static-file-server/k6-result-${{ github.run_id }}.json
+            aws s3 cp ${{ env.K6_WEB_DASHBOARD_EXPORT }} s3://${{ env.S3_BUCKET }}/k6-result-${{ github.run_id }}.html
 
       - name: Download k6 result from S3
-        run: aws s3 cp s3://static-file-server/k6-result-${{ github.run_id }}.json ./k6-result.json
+        run: aws s3 cp s3://${{ env.S3_BUCKET }}/k6-result-${{ github.run_id }}.html ./k6-result.html
 
       - name: Upload k6 result as artifact
         uses: actions/upload-artifact@v4
