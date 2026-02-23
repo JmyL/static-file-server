@@ -90,12 +90,6 @@ jobs:
           aws s3 cp k6/script.js s3://${{ env.S3_BUCKET }}/script.js
           aws s3 cp ${{ env.TARGET_FILE }} s3://${{ env.S3_BUCKET }}/${{ env.TARGET_FILE }}
 
-      - name: Wait for test_server EC2 instance to be ready
-        uses: ./.github/actions/wait-for-ec2-instance
-        with:
-          instance_id: ${{ steps.test_server.outputs.instance_id }}
-          region: ${{ env.AWS_REGION }}
-
       - name: Run server application
         if: ${{ env.SERVER_IMAGE != 'nginx' }}
         uses: peterkimzz/aws-ssm-send-command@master
@@ -131,16 +125,9 @@ jobs:
             docker cp ${{ env.TARGET_FILE }}  server:/usr/share/nginx/html/
             docker exec server nginx -s reload
 
-      - name: Wait for k6_test EC2 instance to be ready
-        uses: ./.github/actions/wait-for-ec2-instance
-        with:
-          instance_id: ${{ steps.k6_test.outputs.instance_id }}
-          region: ${{ env.AWS_REGION }}
-          timeout: 300
-
       - name: Run k6 test
         env:
-          TARGET_HOSTNAME: ${{ steps.test_server.outputs.ip }}
+          TARGET_HOSTNAME: ${{ steps.k6_test.outputs.ip }}
           TARGET_PORT: 80
           DOWNLOAD_PATH: README.md
           K6_WEB_DASHBOARD: true
