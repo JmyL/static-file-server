@@ -139,7 +139,7 @@ jobs:
 
       - name: Run k6 test
         env:
-          TARGET_HOSTNAME: ${{ steps.k6_test.outputs.ip }}
+          TARGET_HOSTNAME: ${{ steps.test_server.outputs.ip }}
           TARGET_PORT: 80
           DOWNLOAD_PATH: README.md
           K6_WEB_DASHBOARD: true
