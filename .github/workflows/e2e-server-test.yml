@@ -183,6 +183,20 @@ jobs:
           echo "The Command id is ${{ steps.nginx_run.outputs.command-id }}"
           aws ssm get-command-invocation --command-id ${{ steps.nginx_run.outputs.command-id }} --instance-id ${{ steps.test_server.outputs.instance_id }}
 
+      - name: Wait for server to be ready (from runner)
+        run: |
+          SERVER_IP=${{ steps.test_server.outputs.ip }}
+          for i in {1..60}; do
+            if curl -sf http://$SERVER_IP:80/files/README.md; then
+              echo "Server is ready!"
+              exit 0
+            fi
+            echo "Waiting for server to be ready..."
+            sleep 2
+          done
+          echo "Timeout waiting for server"
+          exit 1
+
       - name: Run k6 test
         uses: peterkimzz/aws-ssm-send-command@master
         id: k6_test_run
