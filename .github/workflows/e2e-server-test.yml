@@ -220,6 +220,40 @@ jobs:
           echo "The Command id is ${{ steps.k6_test_run.outputs.command-id }}"
           aws ssm get-command-invocation --command-id ${{ steps.k6_test_run.outputs.command-id }} --instance-id ${{ steps.k6_test.outputs.instance_id }}
 
+      - name: Download test_server CPU metrics from CloudWatch
+        run: |
+          aws cloudwatch get-metric-statistics \
+            --namespace AWS/EC2 \
+            --metric-name CPUUtilization \
+            --dimensions Name=InstanceId,Value=${{ steps.test_server.outputs.instance_id }} \
+            --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            --period 60 \
+            --statistics Average \
+            --region ${{ env.AWS_REGION }} \
+            > test_server_cpu.json
+
+      - name: Download k6_test CPU metrics from CloudWatch
+        run: |
+          aws cloudwatch get-metric-statistics \
+            --namespace AWS/EC2 \
+            --metric-name CPUUtilization \
+            --dimensions Name=InstanceId,Value=${{ steps.k6_test.outputs.instance_id }} \
+            --start-time $(date -u -d '30 minutes ago' +%Y-%m-%dT%H:%M:%SZ) \
+            --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            --period 60 \
+            --statistics Average \
+            --region ${{ env.AWS_REGION }} \
+            > k6_test_cpu.json
+
+      - name: Upload CloudWatch CPU metrics as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudwatch-cpu-metrics
+          path: |
+            test_server_cpu.json
+            k6_test_cpu.json
+
       - name: Download k6 result from S3
         run: aws s3 cp s3://${{ env.S3_BUCKET }}/k6-result-${{ github.run_id }}.html ./k6-result.html
 
