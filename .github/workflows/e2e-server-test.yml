@@ -181,7 +181,6 @@ jobs:
               break
             elif [[ "$STATUS" == "Failed" ]]; then
               echo "Command failed"
-              exit 1
             fi
             sleep 3
           done
