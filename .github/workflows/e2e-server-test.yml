@@ -120,6 +120,7 @@ jobs:
             # docker cp /tmp/test.csv server:/app
 
       - name: Get the outputs
+        if: ${{ env.SERVER_IMAGE != 'nginx' }}
         run: |
           echo "The Command id is ${{ steps.test_server_run.outputs.command-id }}"
           aws ssm get-command-invocation --command-id ${{ steps.test_server_run.outputs.command-id }} --instance-id ${{ steps.test_server.outputs.instance_id }}
@@ -145,6 +146,7 @@ jobs:
             docker exec server nginx -s reload
 
       - name: Get the outputs
+        if: ${{ env.SERVER_IMAGE == 'nginx' }}
         run: |
           echo "The Command id is ${{ steps.nginx_run.outputs.command-id }}"
           aws ssm get-command-invocation --command-id ${{ steps.nginx_run.outputs.command-id }} --instance-id ${{ steps.test_server.outputs.instance_id }}
