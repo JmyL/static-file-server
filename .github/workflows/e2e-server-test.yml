@@ -122,6 +122,22 @@ jobs:
       - name: Get the outputs
         if: ${{ env.SERVER_IMAGE != 'nginx' }}
         run: |
+          for i in {1..20}; do
+            STATUS=$(aws ssm list-command-invocations \
+              --command-id ${{ steps.test_server_run.outputs.command-id }} \
+              --instance-id ${{ steps.test_server.outputs.instance_id }} \
+              --details \
+              --query "CommandInvocations[0].Status" \
+              --output text)
+            echo "Current status: $STATUS"
+            if [[ "$STATUS" == "Success" ]]; then
+              break
+            elif [[ "$STATUS" == "Failed" ]]; then
+              echo "Command failed"
+              break
+            fi
+            sleep 3
+          done
           echo "The Command id is ${{ steps.test_server_run.outputs.command-id }}"
           aws ssm get-command-invocation --command-id ${{ steps.test_server_run.outputs.command-id }} --instance-id ${{ steps.test_server.outputs.instance_id }}
 
@@ -148,6 +164,22 @@ jobs:
       - name: Get the outputs
         if: ${{ env.SERVER_IMAGE == 'nginx' }}
         run: |
+          for i in {1..20}; do
+            STATUS=$(aws ssm list-command-invocations \
+              --command-id ${{ steps.test_server_run.outputs.command-id }} \
+              --instance-id ${{ steps.test_server.outputs.instance_id }} \
+              --details \
+              --query "CommandInvocations[0].Status" \
+              --output text)
+            echo "Current status: $STATUS"
+            if [[ "$STATUS" == "Success" ]]; then
+              break
+            elif [[ "$STATUS" == "Failed" ]]; then
+              echo "Command failed"
+              break
+            fi
+            sleep 3
+          done
           echo "The Command id is ${{ steps.nginx_run.outputs.command-id }}"
           aws ssm get-command-invocation --command-id ${{ steps.nginx_run.outputs.command-id }} --instance-id ${{ steps.test_server.outputs.instance_id }}
 
@@ -164,8 +196,8 @@ jobs:
           command: |
             while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done
             aws s3 cp s3://${{ env.S3_BUCKET }}/script.js script.js
-            TARGET_HOSTNAME=${{ steps.test_server.outputs.ip }} TARGET_PORT=80 DOWNLOAD_PATH=README.md K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=/tmp/html-report.html k6 run script.js
-            aws s3 cp ${{ env.K6_WEB_DASHBOARD_EXPORT }} s3://${{ env.S3_BUCKET }}/k6-result-${{ github.run_id }}.html
+            TARGET_HOSTNAME=${{ steps.test_server.outputs.ip }} TARGET_PORT=80 DOWNLOAD_PATH=README.md K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT=html-report.html k6 run script.js
+            aws s3 cp html-report.html s3://${{ env.S3_BUCKET }}/k6-result-${{ github.run_id }}.html
 
       - name: Get the outputs
         run: |
@@ -181,6 +213,7 @@ jobs:
               break
             elif [[ "$STATUS" == "Failed" ]]; then
               echo "Command failed"
+              break
             fi
             sleep 3
           done
