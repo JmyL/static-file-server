@@ -227,7 +227,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: k6-result
-          path: ./k6-result.json
+          path: ./k6-result.html
 
       - name: Terraform Destroy
         if: always()
