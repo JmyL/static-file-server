@@ -115,7 +115,7 @@ jobs:
           working-directory: /app
           command: |
             while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done
-            docker run -d --name server --security-opt seccomp=unconfined -l 80:80 --entrypoint build/bin/server/${{ github.event.inputs.server_image }} ghcr.io/${REPO}/server:latest 80
+            docker run -d --name server --security-opt seccomp=unconfined -p 80:80 --entrypoint /app/build/bin/server/${{ github.event.inputs.server_image }} ghcr.io/${REPO}/server:latest 80
             for i in {1..60}; do
               if curl -sf localhost:80/files/README.md; then
                 echo "Server is ready!"
