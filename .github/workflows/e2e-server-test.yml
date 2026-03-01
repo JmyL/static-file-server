@@ -115,7 +115,15 @@ jobs:
           working-directory: /app
           command: |
             while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done
-            docker run -d --name server --security-opt seccomp=unconfined -p 80:80 --entrypoint build/bin/server/${{ github.event.inputs.server_image }} ghcr.io/${REPO}/server:latest 80
+            docker run -d --name server --security-opt seccomp=unconfined -l 80:80 --entrypoint build/bin/server/${{ github.event.inputs.server_image }} ghcr.io/${REPO}/server:latest 80
+            for i in {1..60}; do
+              if curl -sf localhost:80/files/README.md; then
+                echo "Server is ready!"
+                exit 0
+              fi
+              echo "Waiting for server to be ready..."
+              sleep 2
+            done
             # curl https://img.exim.gov/s3fs-public/dataset/vbhv-d8am/Data.Gov_-_FY25_Q3.csv -o /tmp/test.csv
             # docker cp /tmp/test.csv server:/app
 
