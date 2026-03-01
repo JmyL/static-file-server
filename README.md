@@ -24,3 +24,13 @@ export BUILD_TYPE=Debug
 ```{bash}
 cmake -B $BUILD_TYPE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 ```
+
+## lnav format
+
+Install the lnav format file:
+
+```{bash}
+lnav -i tools/lnav/formats/static_file_server_log.json
+```
+
+Logs are expected to use the `.trace.log` suffix to match this format.
