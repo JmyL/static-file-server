@@ -41,7 +41,7 @@ awaitable<void> session(tcp::socket sock, ReadmeContent<Executor> &content) {
         for (;;) {
             auto len = co_await net::async_read_until(sock, sbuf, "\r\n\r\n",
                                                       use_awaitable);
-            std::cout << "Received " << len << " bytes\n";
+            // std::cout << "Received " << len << " bytes\n";
             sbuf.consume(len);
 
             try {
@@ -68,7 +68,7 @@ awaitable<void> session(tcp::socket sock, ReadmeContent<Executor> &content) {
                         net::buffer(header.data(), header.size()),
                         net::buffer(buffer.data(), buffer.size())},
                     use_awaitable);
-                std::cout << "Sent " << write_len << " bytes\n";
+                // std::cout << "Sent " << write_len << " bytes\n";
             } catch (const boost::system::system_error &e) {
                 std::cerr << "Error opening file: " << e.what() << "\n";
                 // TODO: Do proper error handling here,
@@ -78,7 +78,7 @@ awaitable<void> session(tcp::socket sock, ReadmeContent<Executor> &content) {
         }
     } catch (boost::system::system_error &e) {
         if (e.code() == net::error::eof) {
-            std::cout << "Connection closed by peer.\n";
+            // std::cout << "Connection closed by peer.\n";
             co_return;
         } else {
             std::cerr << "Boost System Error in thread: " << e.what() << "\n";

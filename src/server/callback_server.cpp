@@ -45,11 +45,11 @@ class session : public std::enable_shared_from_this<session> {
             socket_, sbuf, "\r\n\r\n",
             [this, self](boost::system::error_code ec, std::size_t length) {
                 if (!ec) {
-                    std::cout << "Received " << length << " bytes\n";
+                    // std::cout << "Received " << length << " bytes\n";
                     sbuf.consume(length);
                     do_write();
                 } else if (ec == net::error::eof) {
-                    std::cout << "Connection closed by peer.\n";
+                    // std::cout << "Connection closed by peer.\n";
                     return;
                 } else {
                     std::cerr << "Boost System Error: " << ec << "\n";
@@ -82,10 +82,10 @@ class session : public std::enable_shared_from_this<session> {
                 net::buffer(buffer.data(), buffer.size())},
             [this, self](boost::system::error_code ec, std::size_t length) {
                 if (!ec) {
-                    std::cout << "Sent " << length << " bytes\n";
+                    // std::cout << "Sent " << length << " bytes\n";
                     do_read();
                 } else if (ec == net::error::eof) {
-                    std::cout << "Connection closed by peer.\n";
+                    // std::cout << "Connection closed by peer.\n";
                     return;
                 } else {
                     std::cerr << "Boost System Error: " << ec << "\n";

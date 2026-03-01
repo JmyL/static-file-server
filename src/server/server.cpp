@@ -34,7 +34,7 @@ void session(net::io_context &io_context, tcp::socket sock,
         auto sbuf = net::streambuf(max_length);
         for (;;) {
             auto len = net::read_until(sock, sbuf, "\r\n\r\n");
-            std::cout << "Received " << len << " bytes\n";
+            // std::cout << "Received " << len << " bytes\n";
             sbuf.consume(len);
 
             try {
@@ -58,7 +58,7 @@ void session(net::io_context &io_context, tcp::socket sock,
                     sock, std::array<net::const_buffer, 2>{
                               net::buffer(header.data(), header.size()),
                               net::buffer(buffer.data(), buffer.size())});
-                std::cout << "Sent " << write_len << " bytes\n";
+                // std::cout << "Sent " << write_len << " bytes\n";
             } catch (const boost::system::system_error &e) {
                 std::cerr << "Error opening file: " << e.what() << "\n";
                 // TODO: Do proper error handling here,
@@ -68,7 +68,7 @@ void session(net::io_context &io_context, tcp::socket sock,
         }
     } catch (boost::system::system_error &e) {
         if (e.code() == net::error::eof) {
-            std::cout << "Connection closed by peer.\n";
+            // std::cout << "Connection closed by peer.\n";
             return;
         } else {
             std::cerr << "Boost System Error in thread: " << e.what() << "\n";
